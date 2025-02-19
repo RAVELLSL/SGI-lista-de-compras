@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lista de Compras</title>
+
+  <style>
+    /* ===== Reset básico ===== */
+    * {
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box;
+    }
+    body {
+      font-family: "Arial", sans-serif;
+      background: linear-gradient(135deg, #dfe9f3 0%, #ffffff 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .container {
+      background-color: #fff;
+      max-width: 700px;
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      padding: 25px;
+      position: relative;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: 600;
+      color: #333;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .input-group label {
+      text-align: left;
+      font-weight: bold;
+      color: #444;
+      margin-bottom: 4px;
+    }
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border 0.3s, box-shadow 0.3s;
+      background: #fff;
+    }
+    input:focus, select:focus {
+      border-color: #007bff;
+      box-shadow: 0 0 4px rgba(0, 123, 255, 0.5);
+      outline: none;
+    }
+    .btn {
+      width: 96%;
+      max-width: 200px;
+      padding: 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      display: inline-block;
+      text-decoration: none;
+      text-align: center;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      opacity: 0.9;
+    }
+    .add-btn    { background-color: #007bff; color: white; }
+    .reset-btn  { background-color: #6c757d; color: white; }
+    .clear-btn  { background-color: #dc3545; color: white; }
+    .pdf-btn    { background-color: #28a745; color: white; }
+    .table-container {
+      overflow-x: auto;
+      margin-top: 15px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+    }
+    .item-list {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      min-width: 600px;
+    }
+    .item-list thead {
+      background-color: #f9f9f9;
+    }
+    .item-list th, .item-list td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
+      font-size: 14px;
+      color: #333;
+    }
+    .item-list th {
+      font-weight: 600;
+    }
+    .item-list tfoot td {
+      font-weight: 600;
+      border-top: 1px solid #ccc;
+      background-color: #f9f9f9;
+    }
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    .actions button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 18px;
+      transition: transform 0.2s;
+    }
+    .actions button:hover {
+      transform: scale(1.2);
+    }
+    .check   { color: #28a745; }
+    .edit    { color: #007bff; }
+    .delete  { color: #dc3545; }
+    .purchased td {
+      text-decoration: line-through;
+      color: #999;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto; 
+      background-color: rgba(0, 0, 0, 0.4);
+      z-index: 999; 
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: auto;
+      padding: 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+      position: relative;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      animation: fadeIn 0.3s;
+    }
+    .modal-content h3 {
+      margin-bottom: 15px;
+      color: #333;
+      text-align: center;
+    }
+    .modal-content label {
+      display: block;
+      font-weight: bold;
+      margin-top: 10px;
+      margin-bottom: 5px;
+      color: #444;
+    }
+    .modal-content input,
+    .modal-content select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 22px;
+      font-weight: bold;
+      color: #999;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .close:hover {
+      color: #666;
+    }
+    .save-edit-btn {
+      background-color: #007bff;
+      color: #fff;
+      display: block;
+      width: 100%;
+      margin-top: 20px;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0; margin-top: -20px;}
+      to {opacity: 1; margin-top: 0;}
+    }
+    @media (max-width: 600px) {
+      .item-list {
+        min-width: 500px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="mainContainer" class="container">
+    <h2>Lista de Compras</h2>
+    <!-- Seção de entrada -->
+    <div class="input-group">
+      <label for="item">Nome do item</label>
+      <input type="text" id="item" placeholder="Ex: Arroz, Sabonete etc." />
+      
+      <label for="quantidade">Quantidade</label>
+      <input type="number" id="quantidade" placeholder="1" min="1" />
+      
+      <label for="valor">Valor (R$)</label>
+      <input type="number" id="valor" placeholder="0.00" step="0.01" />
+      
+      <label for="categoria">Categoria</label>
+      <select id="categoria">
+        <option value="Alimentos">Alimentos</option>
+        <option value="Bebidas">Bebidas</option>
+        <option value="Padaria">Padaria</option>
+        <option value="Frutas e Verduras">Frutas e Verduras</option>
+        <option value="Carnes">Carnes</option>
+        <option value="Laticínios e Ovos">Laticínios e Ovos</option>
+        <option value="Limpeza">Limpeza</option>
+        <option value="Higiene">Higiene</option>
+        <option value="Congelados">Congelados</option>
+        <option value="Mercearia">Mercearia</option>
+        <option value="Farmácia">Farmácia</option>
+        <option value="Pet">Pet</option>
+        <option value="Outros">Outros</option>
+      </select>
+    </div>
+    <button class="btn add-btn" onclick="adicionarItem()">Adicionar Item</button>
+
+    <!-- Tabela de itens -->
+    <div class="table-container">
+      <table class="item-list" id="lista">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Quantidade</th>
+            <th>Valor (R$)</th>
+            <th>Categoria</th>
+            <!-- Aqui adicionamos id="acoesTh" para esconder no PDF -->
+            <th id="acoesTh">Ações</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+        <tfoot>
+          <tr>
+            <td style="font-weight: 600;">Total</td>
+            <td id="sumQuantidade">0</td>
+            <td id="sumValor">R$ 0.00</td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- Botões de ação -->
+    <div style="text-align:center; margin-top: 15px;">
+      <button class="btn reset-btn" onclick="resetarItensComprados()">Desmarcar Itens</button>
+      <button class="btn clear-btn" onclick="limparLista()">Limpar Lista</button>
+      <button class="btn pdf-btn" onclick="gerarPDF()">Gerar PDF</button>
+    </div>
+  </div>
+
+  <!-- Modal para edição de item -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeEditModal()">&times;</span>
+      <h3>Editar Item</h3>
+      <div class="input-group">
+        <label for="editItemName">Nome do item</label>
+        <input type="text" id="editItemName" />
+        
+        <label for="editQuantity">Quantidade</label>
+        <input type="number" id="editQuantity" min="1" />
+        
+        <label for="editValue">Valor (R$)</label>
+        <input type="number" id="editValue" step="0.01" />
+        
+        <label for="editCategory">Categoria</label>
+        <select id="editCategory">
+          <option value="Alimentos">Alimentos</option>
+          <option value="Bebidas">Bebidas</option>
+          <option value="Padaria">Padaria</option>
+          <option value="Frutas e Verduras">Frutas e Verduras</option>
+          <option value="Carnes">Carnes</option>
+          <option value="Laticínios e Ovos">Laticínios e Ovos</option>
+          <option value="Limpeza">Limpeza</option>
+          <option value="Higiene">Higiene</option>
+          <option value="Congelados">Congelados</option>
+          <option value="Mercearia">Mercearia</option>
+          <option value="Farmácia">Farmácia</option>
+          <option value="Pet">Pet</option>
+          <option value="Outros">Outros</option>
+        </select>
+      </div>
+      <button class="btn save-edit-btn" onclick="saveEdit()">Salvar</button>
+    </div>
+  </div>
+
+  <!-- Scripts de bibliotecas: Carregados antes do seu código -->
+  <!-- 1) html2canvas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- 2) jsPDF (>= 2.5.1) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- Seu script principal -->
+  <script>
+    // Array global de itens, carregado do localStorage
+    let listaCompras = JSON.parse(localStorage.getItem("listaCompras")) || [];
+    // Índice do item em edição (modal)
+    let itemEditIndex = null;
+
+    // Salva a lista no localStorage
+    function salvarLista() {
+      localStorage.setItem("listaCompras", JSON.stringify(listaCompras));
+    }
+
+    // Atualiza a tabela com os itens e os totais
+    function atualizarLista() {
+      const tbody = document.querySelector("#lista tbody");
+      tbody.innerHTML = "";
+      let totalQuantidade = 0;
+      let totalValor = 0;
+
+      listaCompras.forEach((item, index) => {
+        const tr = document.createElement("tr");
+        if (item.comprado) {
+          tr.classList.add("purchased");
+        }
+        // Adicionamos a classe "acoesTd" na célula de ações
+        tr.innerHTML = `
+          <td>${item.nome}</td>
+          <td>${item.quantidade}</td>
+          <td>R$ ${parseFloat(item.valor).toFixed(2)}</td>
+          <td>${item.categoria}</td>
+          <td class="actions acoesTd">
+            <button class="check" title="Marcar/Desmarcar como comprado" onclick="toggleComprado(${index})">✔️</button>
+            <button class="edit" title="Editar item" onclick="openEditModal(${index})">✏️</button>
+            <button class="delete" title="Remover item" onclick="removerItem(${index})">❌</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+        totalQuantidade += item.quantidade;
+        totalValor += (item.quantidade * item.valor);
+      });
+      document.getElementById("sumQuantidade").textContent = totalQuantidade;
+      document.getElementById("sumValor").textContent = "R$ " + totalValor.toFixed(2);
+    }
+
+    // Adiciona um novo item à lista
+    function adicionarItem() {
+      const nome = document.getElementById("item").value.trim();
+      const quantidade = document.getElementById("quantidade").value;
+      const valor = document.getElementById("valor").value;
+      const categoria = document.getElementById("categoria").value;
+
+      const qtdeNum = Number(quantidade);
+      const valorNum = Number(valor);
+
+      if (!nome || isNaN(qtdeNum) || qtdeNum <= 0 || isNaN(valorNum) || valorNum <= 0) {
+        alert("Preencha todos os campos corretamente (valores numéricos válidos).");
+        return;
+      }
+
+      const novoItem = {
+        nome,
+        quantidade: qtdeNum,
+        valor: valorNum,
+        categoria,
+        comprado: false
+      };
+
+      listaCompras.push(novoItem);
+      salvarLista();
+      atualizarLista();
+
+      // Limpa os campos de entrada
+      document.getElementById("item").value = "";
+      document.getElementById("quantidade").value = "";
+      document.getElementById("valor").value = "";
+      document.getElementById("categoria").selectedIndex = 0;
+    }
+
+    // Marca ou desmarca um item como comprado
+    function toggleComprado(index) {
+      listaCompras[index].comprado = !listaCompras[index].comprado;
+      salvarLista();
+      atualizarLista();
+    }
+
+    // Remove um item da lista
+    function removerItem(index) {
+      if (confirm("Deseja realmente remover este item?")) {
+        listaCompras.splice(index, 1);
+        salvarLista();
+        atualizarLista();
+      }
+    }
+
+    // Abre o modal para edição de um item
+    function openEditModal(index) {
+      itemEditIndex = index;
+      const item = listaCompras[index];
+      document.getElementById("editItemName").value = item.nome;
+      document.getElementById("editQuantity").value = item.quantidade;
+      document.getElementById("editValue").value = item.valor;
+      document.getElementById("editCategory").value = item.categoria;
+      document.getElementById("editModal").style.display = "flex";
+    }
+
+    // Fecha o modal de edição
+    function closeEditModal() {
+      document.getElementById("editModal").style.display = "none";
+      itemEditIndex = null;
+    }
+
+    // Salva as alterações feitas no modal de edição
+    function saveEdit() {
+      if (itemEditIndex === null) return;
+
+      const nome = document.getElementById("editItemName").value.trim();
+      const quantidade = document.getElementById("editQuantity").value;
+      const valor = document.getElementById("editValue").value;
+      const categoria = document.getElementById("editCategory").value;
+
+      const qtdeNum = Number(quantidade);
+      const valorNum = Number(valor);
+
+      if (!nome || isNaN(qtdeNum) || qtdeNum <= 0 || isNaN(valorNum) || valorNum <= 0) {
+        alert("Preencha corretamente (valores numéricos válidos).");
+        return;
+      }
+
+      listaCompras[itemEditIndex].nome = nome;
+      listaCompras[itemEditIndex].quantidade = qtdeNum;
+      listaCompras[itemEditIndex].valor = valorNum;
+      listaCompras[itemEditIndex].categoria = categoria;
+
+      salvarLista();
+      atualizarLista();
+      closeEditModal();
+    }
+
+    // Desmarca todos os itens (define comprado como false)
+    function resetarItensComprados() {
+      listaCompras = listaCompras.map(item => ({ ...item, comprado: false }));
+      salvarLista();
+      atualizarLista();
+    }
+
+    // Limpa toda a lista de compras
+    function limparLista() {
+      if (!listaCompras.length) {
+        alert("A lista já está vazia.");
+        return;
+      }
+      if (confirm("Tem certeza de que deseja limpar toda a lista?")) {
+        listaCompras = [];
+        salvarLista();
+        atualizarLista();
+      }
+    }
+
+    /**
+     * Gera um PDF com base no container principal.
+     * Antes de capturar o HTML, oculta o cabeçalho e as células da coluna "Ações".
+     */
+    function gerarPDF() {
+      // Se a lista estiver vazia, não gera PDF
+      if (!listaCompras.length) {
+        alert("A lista está vazia. Não há nada para gerar em PDF.");
+        return;
+      }
+      // Verifica se a biblioteca jsPDF foi carregada
+      if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert("Erro: Biblioteca jsPDF não foi carregada.");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF("p", "mm", "a4");
+
+      // Fecha o modal (caso esteja aberto)
+      closeEditModal();
+
+      // Seleciona o container que será convertido em PDF
+      const element = document.getElementById("mainContainer");
+
+      // Esconde a coluna "Ações" antes de gerar o PDF
+      const acoesTh = document.getElementById("acoesTh");
+      const acoesTds = document.querySelectorAll(".acoesTd");
+
+      // Aplica display: none
+      acoesTh.style.display = "none";
+      acoesTds.forEach(td => td.style.display = "none");
+
+      // Gera o PDF
+      doc.html(element, {
+        x: 10,
+        y: 10,
+        width: 190,                       // Largura útil na página A4 (mm)
+        windowWidth: element.scrollWidth  // Largura real do elemento
+      })
+      .then(() => {
+        doc.save("ListaDeCompras.pdf");
+
+        // Restaura a coluna "Ações" na tela
+        acoesTh.style.display = "";
+        acoesTds.forEach(td => td.style.display = "");
+      })
+      .catch((error) => {
+        console.error("Erro ao gerar PDF:", error);
+        alert("Ocorreu um erro ao gerar o PDF. Verifique o console para mais detalhes.");
+
+        // Restaura a coluna mesmo em caso de erro
+        acoesTh.style.display = "";
+        acoesTds.forEach(td => td.style.display = "");
+      });
+    }
+
+    // Fecha o modal ao clicar fora do conteúdo
+    window.addEventListener("click", (event) => {
+      const modal = document.getElementById("editModal");
+      if (event.target === modal) {
+        closeEditModal();
+      }
+    });
+
+    // Inicializa a lista ao carregar a página
+    atualizarLista();
+  </script>
+</body>
+</html>
